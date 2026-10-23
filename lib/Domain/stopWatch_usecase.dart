@@ -1,0 +1,31 @@
+
+import 'stopWatch_entity.dart';
+import 'stopWatch_repository.dart';
+
+class StopWatchUseCase {
+  final StopWatchRepository repository;
+
+  StopWatchUseCase(this.repository);
+
+  Stream<StopWatchEntity> get stream => repository.stream;
+
+  Future<StopWatchEntity> getInitialValue() {
+    return repository.getInitialValue();
+  }
+
+  void start() {
+    repository.start();
+  }
+
+  void pause() {
+    repository.pause();
+  }
+
+  void reset() {
+    repository.reset();
+  }
+
+  Future<void> dispose() {
+    return repository.dispose();
+  }
+}
