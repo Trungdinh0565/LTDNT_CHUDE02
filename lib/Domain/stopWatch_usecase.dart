@@ -1,4 +1,3 @@
-
 import 'stopWatch_entity.dart';
 import 'stopWatch_repository.dart';
 
@@ -11,6 +10,10 @@ class StopWatchUseCase {
 
   Future<StopWatchEntity> getInitialValue() {
     return repository.getInitialValue();
+  }
+
+  void setDuration(int seconds) {
+    repository.setDuration(seconds);
   }
 
   void start() {

@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../Domain/stopWatch_entity.dart';
@@ -18,13 +18,128 @@ class StopWatchPage extends StatelessWidget {
         '${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
+  void _showSetTimeDialog(BuildContext context, StopWatchCubit cubit) {
+    final hoursController = TextEditingController(text: '0');
+    final minutesController = TextEditingController(text: '1');
+    final secondsController = TextEditingController(text: '0');
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.timer_outlined, color: Colors.blue),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Cài đặt thời gian đếm ngược',
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Nhập thời gian bạn muốn đếm ngược:',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: hoursController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(2),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Giờ',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: minutesController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(2),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Phút',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: secondsController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(2),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Giây',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final hours = int.tryParse(hoursController.text) ?? 0;
+                final minutes = int.tryParse(minutesController.text) ?? 0;
+                final seconds = int.tryParse(secondsController.text) ?? 0;
+                final totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+
+                if (totalSeconds > 0) {
+                  cubit.setDuration(totalSeconds);
+                  Navigator.of(dialogContext).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vui lòng nhập thời gian lớn hơn 0 giây!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Xác nhận'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<StopWatchCubit>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Future & Stream'),
+        title: const Text('Future & Stream Demo'),
         centerTitle: true,
       ),
       body: Center(
@@ -41,98 +156,186 @@ class StopWatchPage extends StatelessWidget {
               );
             }
 
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.timer_outlined,
-                  size: 80,
-                  color: Colors.blue,
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'ĐỒNG HỒ BẤM GIỜ',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    state.isCompleted
+                        ? Icons.alarm_on_rounded
+                        : Icons.hourglass_bottom_rounded,
+                    size: 80,
+                    color: state.isCompleted
+                        ? Colors.red
+                        : (state.isRunning ? Colors.blue : Colors.orange),
                   ),
-                ),
-                const SizedBox(height: 20),
-                StreamBuilder<StopWatchEntity>(
-                  stream: cubit.timeStream,
-                  initialData: const StopWatchEntity(
-                    elapsedSeconds: 0,
-                  ),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return const Text('Có lỗi khi nhận dữ liệu');
-                    }
-
-                    final seconds =
-                        snapshot.data?.elapsedSeconds ?? 0;
-
-                    return Text(
-                      formatTime(seconds),
-                      style: const TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        fontFeatures: [
-                          FontFeature.tabularFigures(),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  state.isRunning ? 'Đang chạy' : 'Đang tạm dừng',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: state.isRunning ? Colors.green : Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 36),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: state.isRunning
-                          ? null
-                          : () => cubit.start(),
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('Bắt đầu'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: state.isRunning
-                          ? () => cubit.pause()
-                          : null,
-                      icon: const Icon(Icons.pause),
-                      label: const Text('Tạm dừng'),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () => cubit.reset(),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Đặt lại'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    'Future/async-await: khởi tạo dữ liệu\n'
-                    'StreamController: phát thời gian mỗi giây\n'
-                    'StreamBuilder: cập nhật giao diện tự động',
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: 16),
+                  const Text(
+                    'ĐỒNG HỒ ĐẾM NGƯỢC',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  StreamBuilder<StopWatchEntity>(
+                    stream: cubit.timeStream,
+                    initialData: const StopWatchEntity(
+                      remainingSeconds: 60,
+                    ),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return const Text('Có lỗi khi nhận dữ liệu');
+                      }
+
+                      final seconds = snapshot.data?.remainingSeconds ?? 0;
+                      final isDone = snapshot.data?.isCompleted ?? false;
+
+                      return Column(
+                        children: [
+                          Text(
+                            formatTime(seconds),
+                            style: TextStyle(
+                              fontSize: 52,
+                              fontWeight: FontWeight.bold,
+                              color: isDone ? Colors.red : Colors.blue.shade900,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                          if (isDone)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                '⏰ HẾT GIỜ!',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    state.isRunning
+                        ? 'Đang đếm ngược...'
+                        : (state.isCompleted
+                            ? 'Đã hoàn thành đếm ngược'
+                            : 'Đang tạm dừng / Chờ bắt đầu'),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: state.isRunning
+                          ? Colors.green
+                          : (state.isCompleted ? Colors.red : Colors.grey),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Bộ chọn nhanh thời gian
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ActionChip(
+                          avatar: const Icon(Icons.timer, size: 18),
+                          label: const Text('1 phút'),
+                          onPressed: state.isRunning
+                              ? null
+                              : () => cubit.setDuration(60),
+                        ),
+                        ActionChip(
+                          avatar: const Icon(Icons.timer, size: 18),
+                          label: const Text('3 phút'),
+                          onPressed: state.isRunning
+                              ? null
+                              : () => cubit.setDuration(180),
+                        ),
+                        ActionChip(
+                          avatar: const Icon(Icons.timer, size: 18),
+                          label: const Text('5 phút'),
+                          onPressed: state.isRunning
+                              ? null
+                              : () => cubit.setDuration(300),
+                        ),
+                        ActionChip(
+                          avatar: const Icon(Icons.timer, size: 18),
+                          label: const Text('10 phút'),
+                          onPressed: state.isRunning
+                              ? null
+                              : () => cubit.setDuration(600),
+                        ),
+                        ActionChip(
+                          avatar: const Icon(Icons.edit, size: 18),
+                          label: const Text('Tự nhập...'),
+                          onPressed: state.isRunning
+                              ? null
+                              : () => _showSetTimeDialog(context, cubit),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  // Các nút điều khiển chính
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: state.isRunning ? null : () => cubit.start(),
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Bắt đầu'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: state.isRunning ? () => cubit.pause() : null,
+                        icon: const Icon(Icons.pause),
+                        label: const Text('Tạm dừng'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => cubit.reset(),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Đặt lại'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 36),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      '• Future/async-await: Khởi tạo giá trị thời gian ban đầu\n'
+                      '• StreamController & Timer: Đếm ngược mỗi giây về 0\n'
+                      '• StreamBuilder & Cubit: Cập nhật giao diện và trạng thái tự động',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),

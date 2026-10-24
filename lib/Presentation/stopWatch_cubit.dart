@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../Domain/stopWatch_entity.dart';
@@ -6,15 +7,30 @@ import '../Domain/stopWatch_usecase.dart';
 class StopWatchState {
   final bool isLoading;
   final bool isRunning;
+  final bool isCompleted;
 
   const StopWatchState({
     this.isLoading = true,
     this.isRunning = false,
+    this.isCompleted = false,
   });
+
+  StopWatchState copyWith({
+    bool? isLoading,
+    bool? isRunning,
+    bool? isCompleted,
+  }) {
+    return StopWatchState(
+      isLoading: isLoading ?? this.isLoading,
+      isRunning: isRunning ?? this.isRunning,
+      isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
 }
 
 class StopWatchCubit extends Cubit<StopWatchState> {
   final StopWatchUseCase useCase;
+  StreamSubscription<StopWatchEntity>? _streamSubscription;
 
   StopWatchCubit(this.useCase) : super(const StopWatchState());
 
@@ -25,13 +41,26 @@ class StopWatchCubit extends Cubit<StopWatchState> {
       await useCase.getInitialValue();
 
       if (!isClosed) {
-        emit(const StopWatchState(isLoading: false));
+        emit(state.copyWith(isLoading: false));
       }
     } catch (_) {
       if (!isClosed) {
-        emit(const StopWatchState(isLoading: false));
+        emit(state.copyWith(isLoading: false));
       }
     }
+
+    _streamSubscription?.cancel();
+    _streamSubscription = useCase.stream.listen((entity) {
+      if (!isClosed && entity.isCompleted) {
+        emit(state.copyWith(isRunning: false, isCompleted: true));
+      }
+    });
+  }
+
+  void setDuration(int seconds) {
+    if (isClosed) return;
+    useCase.setDuration(seconds);
+    emit(state.copyWith(isRunning: false, isCompleted: false));
   }
 
   void start() {
@@ -40,9 +69,10 @@ class StopWatchCubit extends Cubit<StopWatchState> {
     useCase.start();
 
     emit(
-      StopWatchState(
+      state.copyWith(
         isLoading: false,
         isRunning: true,
+        isCompleted: false,
       ),
     );
   }
@@ -53,7 +83,7 @@ class StopWatchCubit extends Cubit<StopWatchState> {
     useCase.pause();
 
     emit(
-      const StopWatchState(
+      state.copyWith(
         isLoading: false,
         isRunning: false,
       ),
@@ -66,15 +96,17 @@ class StopWatchCubit extends Cubit<StopWatchState> {
     useCase.reset();
 
     emit(
-      const StopWatchState(
+      state.copyWith(
         isLoading: false,
         isRunning: false,
+        isCompleted: false,
       ),
     );
   }
 
   @override
   Future<void> close() async {
+    await _streamSubscription?.cancel();
     await useCase.dispose();
     await super.close();
   }

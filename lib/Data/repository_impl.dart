@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import '../Domain/stopWatch_entity.dart';
@@ -7,10 +6,11 @@ import 'stopWatch_model.dart';
 
 class StopWatchRepositoryImpl implements StopWatchRepository {
   final StreamController<StopWatchEntity> _controller =
-      StreamController<StopWatchEntity>();
+      StreamController<StopWatchEntity>.broadcast();
 
   Timer? _timer;
-  int _elapsedSeconds = 0;
+  int _initialSeconds = 60; // Mặc định ban đầu 60 giây (1 phút)
+  int _remainingSeconds = 60;
   bool _isDisposed = false;
 
   @override
@@ -19,20 +19,55 @@ class StopWatchRepositoryImpl implements StopWatchRepository {
   @override
   Future<StopWatchEntity> getInitialValue() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return const StopWatchModel(elapsedSeconds: 0);
+    return StopWatchModel(
+      remainingSeconds: _remainingSeconds,
+      initialSeconds: _initialSeconds,
+      isCompleted: false,
+    );
+  }
+
+  @override
+  void setDuration(int seconds) {
+    if (_isDisposed) return;
+
+    pause();
+    _initialSeconds = seconds > 0 ? seconds : 0;
+    _remainingSeconds = _initialSeconds;
+
+    if (!_controller.isClosed) {
+      _controller.add(
+        StopWatchModel(
+          remainingSeconds: _remainingSeconds,
+          initialSeconds: _initialSeconds,
+          isCompleted: false,
+        ),
+      );
+    }
   }
 
   @override
   void start() {
-    if (_isDisposed || _timer != null) return;
+    if (_isDisposed || _timer != null || _remainingSeconds <= 0) return;
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_isDisposed || _controller.isClosed) return;
 
-      _elapsedSeconds++;
+      if (_remainingSeconds > 0) {
+        _remainingSeconds--;
+      }
+
+      final isCompleted = _remainingSeconds == 0;
+      if (isCompleted) {
+        _timer?.cancel();
+        _timer = null;
+      }
 
       _controller.add(
-        StopWatchModel(elapsedSeconds: _elapsedSeconds),
+        StopWatchModel(
+          remainingSeconds: _remainingSeconds,
+          initialSeconds: _initialSeconds,
+          isCompleted: isCompleted,
+        ),
       );
     });
   }
@@ -48,11 +83,15 @@ class StopWatchRepositoryImpl implements StopWatchRepository {
     if (_isDisposed) return;
 
     pause();
-    _elapsedSeconds = 0;
+    _remainingSeconds = _initialSeconds;
 
     if (!_controller.isClosed) {
       _controller.add(
-        const StopWatchModel(elapsedSeconds: 0),
+        StopWatchModel(
+          remainingSeconds: _remainingSeconds,
+          initialSeconds: _initialSeconds,
+          isCompleted: false,
+        ),
       );
     }
   }
