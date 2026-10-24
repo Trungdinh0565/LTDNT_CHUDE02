@@ -139,36 +139,50 @@ Future<void> setupDependencies() async {
 ### Cách 2: Xuất và cài đặt ứng dụng bằng file APK (Android)
 
 #### 1. Lệnh xuất file APK:
-Mở terminal tại thư mục gốc của dự án và chạy một trong hai lệnh sau:
-- **Xuất bản Release (Tối ưu kích thước & tốc độ cao nhất):**
+Mở terminal tại thư mục gốc của dự án và chạy lệnh sau để build:
+- **Xuất bản Release (Khuyên dùng - dung lượng nhẹ, hiệu năng cao nhất):**
   ```bash
   flutter build apk --release
   ```
-- **Xuất bản Debug (Dùng để kiểm thử nhanh):**
+- **Xuất bản Debug (Dùng để kiểm thử & gỡ lỗi nhanh):**
   ```bash
   flutter build apk --debug
   ```
 
 #### 2. Vị trí file APK sau khi xuất:
-File APK được lưu tại đường dẫn sau trong thư mục dự án:
+File APK xuất ra được lưu tại đường dẫn:
 - Bản Release: `build/app/outputs/flutter-apk/app-release.apk`
 - Bản Debug: `build/app/outputs/flutter-apk/app-debug.apk`
 
-#### 3. Các bước cài đặt file APK lên thiết bị Android:
+---
 
-- **Cách 1: Sao chép trực tiếp vào điện thoại**
-  1. Kết nối điện thoại Android với máy tính qua cáp USB hoặc gửi file `.apk` qua Zalo/Drive/Telegram.
-  2. Mở trình quản lý file (**Files / Tệp**) trên điện thoại và tìm đến file APK đã lưu.
-  3. Nhấn vào file APK để tiến hành cài đặt.
-  4. Nếu máy hiển thị cảnh báo bảo mật, chọn **Cài đặt từ nguồn này (Allow from this source)** hoặc **Vẫn cài đặt (Install anyway)**.
-  5. Sau khi cài đặt hoàn tất, nhấn **Mở** để trải nghiệm ứng dụng.
+#### 3. Hướng dẫn chi tiết các cách cài đặt file APK:
 
-- **Cách 2: Cài đặt nhanh qua công cụ ADB (Dành cho nhà phát triển)**
-  1. Bật chế độ **Gỡ lỗi USB (USB Debugging)** trên thiết bị Android.
-  2. Kết nối điện thoại với máy tính và mở terminal, gõ lệnh:
-     ```bash
-     adb install build/app/outputs/flutter-apk/app-release.apk
-     ```
+##### Phương pháp 1: Cài đặt trực tiếp trên điện thoại Android (Khuyên dùng cho người dùng)
+1. **Chuyển file APK vào điện thoại:**
+   - Kết nối điện thoại với máy tính qua cáp USB và sao chép file `app-release.apk` vào bộ nhớ máy (thư mục *Download* hoặc thẻ nhớ).
+   - Hoặc tải file APK lên Google Drive, Zalo, Telegram... rồi tải về máy điện thoại.
+2. **Cho phép cài đặt từ nguồn không xác định (Unknown Sources):**
+   - Khi mở file `.apk`, nếu hệ thống hiển thị thông báo *"Để bảo mật, điện thoại không được phép cài đặt các ứng dụng không xác định từ nguồn này"*:
+     - Nhấn **Cài đặt (Settings)**.
+     - Bật tùy chọn **Cho phép từ nguồn này (Allow from this source)**.
+3. **Vượt qua cảnh báo Google Play Protect (nếu có):**
+   - Do ứng dụng tự build chưa đưa lên CH Play, Google Play Protect có thể hiện cảnh báo màu đỏ/vàng: *"Ứng dụng bị chặn bởi Play Protect"* hoặc *"Không nhận dạng được nhà phát triển"*.
+   - Nhấn vào **Chi tiết (More details)** -> Chọn **Vẫn cài đặt (Install anyway)**.
+4. **Hoàn tất:** Nhấn **Cài đặt (Install)** -> Chờ vài giây -> Nhấn **Mở (Open)** để khởi chạy ứng dụng.
+
+##### Phương pháp 2: Cài đặt nhanh qua ADB (Dành cho lập trình viên / máy tính kết nối điện thoại)
+1. Bật **Tùy chọn cho nhà phát triển (Developer Options)** và kích hoạt **Gỡ lỗi USB (USB Debugging)** trên điện thoại Android.
+2. Cắm cáp kết nối điện thoại với máy tính và chọn *"Cho phép gỡ lỗi USB"*.
+3. Mở terminal tại thư mục dự án và chạy lệnh:
+   ```bash
+   adb install -r build/app/outputs/flutter-apk/app-release.apk
+   ```
+   *(Tham số `-r` cho phép cài đè/cập nhật phiên bản mới mà không làm mất dữ liệu app).*
+
+##### Phương pháp 3: Cài đặt trên máy ảo Android Emulator
+- Khởi động máy ảo Android (từ Android Studio hoặc VS Code).
+- **Kéo và thả (Drag & Drop)** trực tiếp file `app-release.apk` từ trình duyệt file của máy tính vào màn hình của máy ảo. Hệ thống sẽ tự động cài đặt trong tích tắc.
 
 ---
 
