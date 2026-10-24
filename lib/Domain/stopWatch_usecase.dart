@@ -8,6 +8,8 @@ class StopWatchUseCase {
 
   Stream<StopWatchEntity> get stream => repository.stream;
 
+  StopWatchEntity get currentValue => repository.currentValue;
+
   Future<StopWatchEntity> getInitialValue() {
     return repository.getInitialValue();
   }

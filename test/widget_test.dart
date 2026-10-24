@@ -70,6 +70,12 @@ void main() {
     expect(find.text('⏰ HẾT GIỜ!'), findsOneWidget);
     expect(find.text('Đã hoàn thành đếm ngược'), findsOneWidget);
 
+    // Kiểm tra nút Bắt đầu bị vô hiệu hóa khi hết giờ
+    final startButton = tester.widget<ElevatedButton>(
+      find.widgetWithText(ElevatedButton, 'Bắt đầu'),
+    );
+    expect(startButton.onPressed, isNull);
+
     // Nhấn Đặt lại -> quay về 00:00:03
     await tester.tap(find.text('Đặt lại'));
     await tester.pumpAndSettle();

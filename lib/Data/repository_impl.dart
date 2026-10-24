@@ -17,13 +17,26 @@ class StopWatchRepositoryImpl implements StopWatchRepository {
   Stream<StopWatchEntity> get stream => _controller.stream;
 
   @override
+  StopWatchEntity get currentValue => StopWatchModel(
+        remainingSeconds: _remainingSeconds,
+        initialSeconds: _initialSeconds,
+        isCompleted: _remainingSeconds == 0,
+      );
+
+  @override
   Future<StopWatchEntity> getInitialValue() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return StopWatchModel(
+    final initial = StopWatchModel(
       remainingSeconds: _remainingSeconds,
       initialSeconds: _initialSeconds,
       isCompleted: false,
     );
+
+    if (!_controller.isClosed) {
+      _controller.add(initial);
+    }
+
+    return initial;
   }
 
   @override

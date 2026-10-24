@@ -35,6 +35,8 @@ class StopWatchCubit extends Cubit<StopWatchState> {
 
   Stream<StopWatchEntity> get timeStream => useCase.stream;
 
+  StopWatchEntity get currentValue => useCase.currentValue;
+
   Future<void> initialize() async {
     try {
       await useCase.getInitialValue();

@@ -75,7 +75,7 @@ class StopWatchPage extends StatelessWidget {
                   const SizedBox(height: 20),
                   StreamBuilder<StopWatchEntity>(
                     stream: cubit.timeStream,
-                    initialData: const StopWatchEntity(remainingSeconds: 60),
+                    initialData: cubit.currentValue,
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return const Text('Có lỗi khi nhận dữ liệu');
