@@ -1,5 +1,5 @@
 # LTDNT_CHUDE02 - Quản lý Bất đồng bộ với Future & Stream trong Flutter
-
+*Báo cáo tuần - chủ đề 02*
 ## 1. Giới thiệu
 Dự án **StopWatch App** (Đồng hồ bấm giờ) được xây dựng phục vụ môn học **Lập trình đa nền tảng - Chủ đề 02**.  
 Ứng dụng minh họa trực quan cách áp dụng các cơ chế xử lý bất đồng bộ cốt lõi trong Flutter và Dart kết hợp với kiến trúc Clean Architecture:
@@ -106,4 +106,3 @@ lib/
 - **Lê Văn Nhật**
 
 ---
-*Báo cáo môn học Lập trình đa nền tảng - Chủ đề 02.*
