@@ -59,6 +59,23 @@ test/
 
 ## 5. Chi tiết kiến trúc và luồng dữ liệu bất đồng bộ
 
+### Sơ đồ kiến trúc & luồng dữ liệu:
+```mermaid
+graph TD
+    UI["Presentation Layer: StopWatchPage\n(StreamBuilder + BlocBuilder)"]
+    Cubit["Presentation Layer: StopWatchCubit\n(State: isLoading, isRunning, isCompleted)"]
+    UseCase["Domain Layer: StopWatchUseCase"]
+    Repo["Data Layer: StopWatchRepositoryImpl\n(Timer.periodic + StreamController.broadcast)"]
+    Entity["Domain Layer: StopWatchEntity\n(remainingSeconds, initialSeconds, isCompleted)"]
+
+    UI -->|"Gọi hành động (start, pause, reset, setDuration)"| Cubit
+    Cubit -->|"Chuyển tiếp tác vụ nghiệp vụ"| UseCase
+    UseCase -->|"Thao tác dữ liệu"| Repo
+    Repo -->|"Đẩy dữ liệu mỗi giây (Stream.add)"| Entity
+    Entity -->|"Lắng nghe cập nhật thời gian thực (realtime UI)"| UI
+    Entity -->|"Lắng nghe trạng thái hoàn thành"| Cubit
+```
+
 ### 5.1. Domain Layer (Lớp nghiệp vụ)
 - **`StopWatchEntity`**: Chứa dữ liệu cốt lõi:
   - `remainingSeconds`: Số giây còn lại.
@@ -93,7 +110,7 @@ test/
   - `_SetTimeDialog`: Được quản lý dưới dạng `StatefulWidget` độc lập, tự động hủy (dispose) các `TextEditingController` khi đóng để ngăn ngừa rò rỉ bộ nhớ (Memory Leak).
 
 ### 5.4. Dependency Injection
-Được cấu hình tập trung trong [injection_container.dart](file:///D:/DNTCDE2/lib/injection_container.dart) sử dụng `GetIt` tinh gọn:
+Được cấu hình tập trung trong [lib/injection_container.dart](lib/injection_container.dart) sử dụng `GetIt` tinh gọn:
 ```dart
 Future<void> setupDependencies() async {
   getIt
