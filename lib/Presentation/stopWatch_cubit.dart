@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../Domain/stopWatch_entity.dart';
 import '../Domain/stopWatch_usecase.dart';
 
 class StopWatchState {
@@ -17,7 +18,7 @@ class StopWatchCubit extends Cubit<StopWatchState> {
 
   StopWatchCubit(this.useCase) : super(const StopWatchState());
 
-  get stream => useCase.stream;
+  Stream<StopWatchEntity> get timeStream => useCase.stream;
 
   Future<void> initialize() async {
     try {

@@ -1,4 +1,4 @@
-import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -59,7 +59,7 @@ class StopWatchPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 StreamBuilder<StopWatchEntity>(
-                  stream: cubit.stream,
+                  stream: cubit.timeStream,
                   initialData: const StopWatchEntity(
                     elapsedSeconds: 0,
                   ),
