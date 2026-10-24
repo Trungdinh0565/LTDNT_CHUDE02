@@ -15,12 +15,13 @@ Dự án **Countdown Timer App** (Đồng hồ đếm ngược) được xây d�
 ---
 
 ## 2. Tính năng nổi bật
-- ⏱️ **Đồng hồ đếm ngược trực quan:** Hiển thị thời gian dạng chuẩn `HH:MM:SS` kèm vòng tròn tiến trình (Circular Progress Indicator) thể hiện tỷ lệ phần trăm thời gian còn lại.
+- ⏱️ **Đồng hồ đếm ngược trực quan:** Hiển thị thời gian dạng chuẩn `HH:MM:SS` rõ ràng, tự động dừng chính xác khi về 0.
 - ⚡ **Thiết lập thời gian nhanh (Presets):** Cung cấp các nút chọn nhanh: 1 phút, 3 phút, 5 phút, 10 phút.
-- ✏️ **Tự nhập thời gian:** Dialog cho phép người dùng tùy chỉnh số Giờ, Phút, Giây tùy ý.
+- ✏️ **Tự nhập thời gian:** Hộp thoại tùy chỉnh cho phép người dùng nhập Giờ, Phút, Giây linh hoạt, có xác thực dữ liệu và giải phóng bộ nhớ sạch sẽ.
 - ⏯️ **Điều khiển linh hoạt:** Bắt đầu (Start), Tạm dừng (Pause), Đặt lại về thời gian ban đầu (Reset).
+- 🔒 **Chống lỗi kẹt trạng thái:** Vô hiệu hóa nút Bắt đầu khi thời gian đã về `00:00:00`, yêu cầu Đặt lại hoặc cài đặt mốc thời gian mới trước khi chạy tiếp.
 - 🔔 **Thông báo trạng thái hoàn thành:** Tự động phát hiện khi hết giờ (`isCompleted = true`), hủy Timer và hiển thị nhãn `⏰ HẾT GIỜ!`.
-- 🧪 **Kiểm thử tự động (Widget & Unit Tests):** Bộ test toàn diện kiểm tra đầy đủ vòng đời đếm ngược, chuyển đổi preset, mở dialog nhập số và xử lý luồng bất đồng bộ.
+- 🧪 **Kiểm thử tự động (Widget & Unit Tests):** Bộ test toàn diện kiểm tra đầy đủ vòng đời đếm ngược, chuyển đổi preset, mở dialog nhập số và xử lý luồng bất đồng bộ (100% passed).
 
 ---
 
@@ -28,13 +29,13 @@ Dự án **Countdown Timer App** (Đồng hồ đếm ngược) được xây d�
 - **Flutter SDK** (hỗ trợ đa nền tảng: Android, iOS, Web, Windows, macOS, Linux).
 - **Dart Async (`Future`, `Stream`, `StreamController.broadcast()`, `Timer`):** Xử lý tác vụ bất đồng bộ và luồng dữ liệu thời gian.
 - **Clean Architecture:** Tách biệt rõ ràng giữa Business Logic, Data và UI.
-- **flutter_bloc (`Cubit` & `BlocBuilder`):** Quản lý trạng thái giao diện (`isLoading`, `isRunning`).
+- **flutter_bloc (`Cubit` & `BlocBuilder`):** Quản lý trạng thái giao diện (`isLoading`, `isRunning`, `isCompleted`).
 - **get_it:** Service Locator / Dependency Injection giúp giải phóng phụ thuộc giữa các lớp.
 
 ---
 
 ## 4. Cấu trúc thư mục dự án
-Dự án được tổ chức theo cấu trúc Clean Architecture chuẩn hóa:
+Dự án được tổ chức theo cấu trúc Clean Architecture chuẩn hóa và tinh gọn:
 
 ```text
 lib/
@@ -46,9 +47,9 @@ lib/
 │   ├── stopWatch_repository.dart # Interface trừu tượng định nghĩa các phương thức nghiệp vụ
 │   └── stopWatch_usecase.dart    # Ca sử dụng (start, pause, reset, setDuration, stream)
 ├── Presentation/
-│   ├── stopWatch_cubit.dart      # Quản lý trạng thái chạy/dừng (StopWatchCubit & StopWatchState)
-│   └── stopWatch_page.dart       # Giao diện đếm ngược (StreamBuilder + BlocBuilder)
-├── injection_container.dart       # Cấu hình Dependency Injection (GetIt)
+│   ├── stopWatch_cubit.dart      # Quản lý trạng thái (StopWatchCubit & StopWatchState)
+│   └── stopWatch_page.dart       # Giao diện đếm ngược & Dialog nhập thời gian (StreamBuilder + BlocBuilder)
+├── injection_container.dart       # Cấu hình Dependency Injection (GetIt) tinh gọn với cú pháp cascade
 └── main.dart                     # Điểm khởi chạy ứng dụng (main entry point)
 test/
 └── widget_test.dart              # Kiểm thử giao diện và kịch bản bất đồng bộ
@@ -85,16 +86,22 @@ test/
   - **`dispose()`**: Đóng stream controller và hủy Timer khi giải phóng tài nguyên.
 
 ### 5.3. Presentation Layer (Lớp giao diện & Quản lý trạng thái)
-- **`StopWatchCubit`**: Phát ra `StopWatchState` quản lý 2 cờ: `isLoading` (đang nạp dữ liệu ban đầu) và `isRunning` (đồng hồ đang chạy hay tạm dừng).
+- **`StopWatchCubit`**: Phát ra `StopWatchState` quản lý 3 cờ: `isLoading` (đang nạp dữ liệu ban đầu), `isRunning` (đồng hồ đang chạy hay tạm dừng) và `isCompleted` (đã đếm về 0).
 - **`StopWatchPage`**:
   - `BlocBuilder<StopWatchCubit, StopWatchState>`: Kiểm soát trạng thái hiển thị loading spinner hoặc bật/tắt (enable/disable) các nút điều khiển phù hợp.
-  - `StreamBuilder<StopWatchEntity>`: Lắng nghe trực tiếp `cubit.stream` để vẽ lại đồng hồ số, vòng đếm ngược CircularProgressIndicator và huy hiệu thông báo (status badge) theo thời gian thực mà không cần `setState()` thủ công.
+  - `StreamBuilder<StopWatchEntity>`: Lắng nghe trực tiếp `cubit.stream` để vẽ lại đồng hồ số và huy hiệu thông báo (status badge) theo thời gian thực mà không cần `setState()` thủ công.
+  - `_SetTimeDialog`: Được quản lý dưới dạng `StatefulWidget` độc lập, tự động hủy (dispose) các `TextEditingController` khi đóng để ngăn ngừa rò rỉ bộ nhớ (Memory Leak).
 
 ### 5.4. Dependency Injection
-Được cấu hình tập trung trong [injection_container.dart](file:///D:/DNTCDE2/lib/injection_container.dart) sử dụng `GetIt`:
-- `StopWatchRepository` -> `StopWatchRepositoryImpl` (Factory)
-- `StopWatchUseCase` -> `StopWatchUseCase` (Factory)
-- `StopWatchCubit` -> `StopWatchCubit` (Factory)
+Được cấu hình tập trung trong [injection_container.dart](file:///D:/DNTCDE2/lib/injection_container.dart) sử dụng `GetIt` tinh gọn:
+```dart
+Future<void> setupDependencies() async {
+  getIt
+    ..registerFactory<StopWatchRepository>(() => StopWatchRepositoryImpl())
+    ..registerFactory<StopWatchUseCase>(() => StopWatchUseCase(getIt()))
+    ..registerFactory<StopWatchCubit>(() => StopWatchCubit(getIt()));
+}
+```
 
 ---
 
@@ -105,7 +112,7 @@ test/
 - Dart SDK tương ứng đi kèm Flutter.
 - Trình biên dịch: Visual Studio Code, Android Studio hoặc Cursor.
 
-### Các bước thực hiện
+### Cách 1: Chạy trực tiếp từ mã nguồn (Source code)
 1. **Clone repository:**
    ```bash
    git clone https://github.com/Trungdinh0565/LTDNT_CHUDE02.git
@@ -126,6 +133,42 @@ test/
    ```bash
    flutter run
    ```
+
+---
+
+### Cách 2: Xuất và cài đặt ứng dụng bằng file APK (Android)
+
+#### 1. Lệnh xuất file APK:
+Mở terminal tại thư mục gốc của dự án và chạy một trong hai lệnh sau:
+- **Xuất bản Release (Tối ưu kích thước & tốc độ cao nhất):**
+  ```bash
+  flutter build apk --release
+  ```
+- **Xuất bản Debug (Dùng để kiểm thử nhanh):**
+  ```bash
+  flutter build apk --debug
+  ```
+
+#### 2. Vị trí file APK sau khi xuất:
+File APK được lưu tại đường dẫn sau trong thư mục dự án:
+- Bản Release: `build/app/outputs/flutter-apk/app-release.apk`
+- Bản Debug: `build/app/outputs/flutter-apk/app-debug.apk`
+
+#### 3. Các bước cài đặt file APK lên thiết bị Android:
+
+- **Cách 1: Sao chép trực tiếp vào điện thoại**
+  1. Kết nối điện thoại Android với máy tính qua cáp USB hoặc gửi file `.apk` qua Zalo/Drive/Telegram.
+  2. Mở trình quản lý file (**Files / Tệp**) trên điện thoại và tìm đến file APK đã lưu.
+  3. Nhấn vào file APK để tiến hành cài đặt.
+  4. Nếu máy hiển thị cảnh báo bảo mật, chọn **Cài đặt từ nguồn này (Allow from this source)** hoặc **Vẫn cài đặt (Install anyway)**.
+  5. Sau khi cài đặt hoàn tất, nhấn **Mở** để trải nghiệm ứng dụng.
+
+- **Cách 2: Cài đặt nhanh qua công cụ ADB (Dành cho nhà phát triển)**
+  1. Bật chế độ **Gỡ lỗi USB (USB Debugging)** trên thiết bị Android.
+  2. Kết nối điện thoại với máy tính và mở terminal, gõ lệnh:
+     ```bash
+     adb install build/app/outputs/flutter-apk/app-release.apk
+     ```
 
 ---
 

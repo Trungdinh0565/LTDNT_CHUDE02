@@ -8,7 +8,7 @@ import 'stopWatch_cubit.dart';
 class StopWatchPage extends StatelessWidget {
   const StopWatchPage({super.key});
 
-  String formatTime(int seconds) {
+  String _formatTime(int seconds) {
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
     final remainingSeconds = seconds % 60;
@@ -19,117 +19,11 @@ class StopWatchPage extends StatelessWidget {
   }
 
   void _showSetTimeDialog(BuildContext context, StopWatchCubit cubit) {
-    final hoursController = TextEditingController(text: '0');
-    final minutesController = TextEditingController(text: '1');
-    final secondsController = TextEditingController(text: '0');
-
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.timer_outlined, color: Colors.blue),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Cài đặt thời gian đếm ngược',
-                ),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Nhập thời gian bạn muốn đếm ngược:',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: hoursController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(2),
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Giờ',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: minutesController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(2),
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Phút',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: secondsController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(2),
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Giây',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final hours = int.tryParse(hoursController.text) ?? 0;
-                final minutes = int.tryParse(minutesController.text) ?? 0;
-                final seconds = int.tryParse(secondsController.text) ?? 0;
-                final totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
-
-                if (totalSeconds > 0) {
-                  cubit.setDuration(totalSeconds);
-                  Navigator.of(dialogContext).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Vui lòng nhập thời gian lớn hơn 0 giây!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Xác nhận'),
-            ),
-          ],
-        );
-      },
+      builder: (_) => _SetTimeDialog(
+        onConfirm: (totalSeconds) => cubit.setDuration(totalSeconds),
+      ),
     );
   }
 
@@ -181,21 +75,19 @@ class StopWatchPage extends StatelessWidget {
                   const SizedBox(height: 20),
                   StreamBuilder<StopWatchEntity>(
                     stream: cubit.timeStream,
-                    initialData: const StopWatchEntity(
-                      remainingSeconds: 60,
-                    ),
+                    initialData: const StopWatchEntity(remainingSeconds: 60),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return const Text('Có lỗi khi nhận dữ liệu');
                       }
 
                       final seconds = snapshot.data?.remainingSeconds ?? 0;
-                      final isDone = snapshot.data?.isCompleted ?? false;
+                      final isDone = snapshot.data?.isCompleted ?? state.isCompleted;
 
                       return Column(
                         children: [
                           Text(
-                            formatTime(seconds),
+                            _formatTime(seconds),
                             style: TextStyle(
                               fontSize: 52,
                               fontWeight: FontWeight.bold,
@@ -248,37 +140,27 @@ class StopWatchPage extends StatelessWidget {
                         ActionChip(
                           avatar: const Icon(Icons.timer, size: 18),
                           label: const Text('1 phút'),
-                          onPressed: state.isRunning
-                              ? null
-                              : () => cubit.setDuration(60),
+                          onPressed: state.isRunning ? null : () => cubit.setDuration(60),
                         ),
                         ActionChip(
                           avatar: const Icon(Icons.timer, size: 18),
                           label: const Text('3 phút'),
-                          onPressed: state.isRunning
-                              ? null
-                              : () => cubit.setDuration(180),
+                          onPressed: state.isRunning ? null : () => cubit.setDuration(180),
                         ),
                         ActionChip(
                           avatar: const Icon(Icons.timer, size: 18),
                           label: const Text('5 phút'),
-                          onPressed: state.isRunning
-                              ? null
-                              : () => cubit.setDuration(300),
+                          onPressed: state.isRunning ? null : () => cubit.setDuration(300),
                         ),
                         ActionChip(
                           avatar: const Icon(Icons.timer, size: 18),
                           label: const Text('10 phút'),
-                          onPressed: state.isRunning
-                              ? null
-                              : () => cubit.setDuration(600),
+                          onPressed: state.isRunning ? null : () => cubit.setDuration(600),
                         ),
                         ActionChip(
                           avatar: const Icon(Icons.edit, size: 18),
                           label: const Text('Tự nhập...'),
-                          onPressed: state.isRunning
-                              ? null
-                              : () => _showSetTimeDialog(context, cubit),
+                          onPressed: state.isRunning ? null : () => _showSetTimeDialog(context, cubit),
                         ),
                       ],
                     ),
@@ -291,12 +173,12 @@ class StopWatchPage extends StatelessWidget {
                     runSpacing: 12,
                     children: [
                       ElevatedButton.icon(
-                        onPressed: state.isRunning ? null : () => cubit.start(),
+                        // Vô hiệu hóa khi đang chạy hoặc đã hết giờ
+                        onPressed: (state.isRunning || state.isCompleted) ? null : () => cubit.start(),
                         icon: const Icon(Icons.play_arrow),
                         label: const Text('Bắt đầu'),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
                       ),
                       ElevatedButton.icon(
@@ -304,8 +186,7 @@ class StopWatchPage extends StatelessWidget {
                         icon: const Icon(Icons.pause),
                         label: const Text('Tạm dừng'),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
                       ),
                       OutlinedButton.icon(
@@ -313,8 +194,7 @@ class StopWatchPage extends StatelessWidget {
                         icon: const Icon(Icons.refresh),
                         label: const Text('Đặt lại'),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
                       ),
                     ],
@@ -340,6 +220,150 @@ class StopWatchPage extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Dialog tự nhập thời gian tách riêng StatefulWidget để dispose controller tránh memory leak
+class _SetTimeDialog extends StatefulWidget {
+  final void Function(int totalSeconds) onConfirm;
+
+  const _SetTimeDialog({required this.onConfirm});
+
+  @override
+  State<_SetTimeDialog> createState() => _SetTimeDialogState();
+}
+
+class _SetTimeDialogState extends State<_SetTimeDialog> {
+  late final TextEditingController _hoursController;
+  late final TextEditingController _minutesController;
+  late final TextEditingController _secondsController;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _hoursController = TextEditingController(text: '0');
+    _minutesController = TextEditingController(text: '1');
+    _secondsController = TextEditingController(text: '0');
+  }
+
+  @override
+  void dispose() {
+    _hoursController.dispose();
+    _minutesController.dispose();
+    _secondsController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final hours = int.tryParse(_hoursController.text) ?? 0;
+    final minutes = int.tryParse(_minutesController.text) ?? 0;
+    final seconds = int.tryParse(_secondsController.text) ?? 0;
+    final totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+
+    if (totalSeconds > 0) {
+      widget.onConfirm(totalSeconds);
+      Navigator.of(context).pop();
+    } else {
+      setState(() {
+        _errorMessage = 'Vui lòng nhập thời gian lớn hơn 0 giây!';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.timer_outlined, color: Colors.blue),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text('Cài đặt thời gian đếm ngược'),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Nhập thời gian bạn muốn đếm ngược:',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _hoursController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'Giờ',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _minutesController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'Phút',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _secondsController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'Giây',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red, fontSize: 13),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Hủy'),
+        ),
+        ElevatedButton(
+          onPressed: _submit,
+          child: const Text('Xác nhận'),
+        ),
+      ],
     );
   }
 }

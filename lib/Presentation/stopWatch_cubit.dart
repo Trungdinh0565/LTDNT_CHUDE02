@@ -19,13 +19,12 @@ class StopWatchState {
     bool? isLoading,
     bool? isRunning,
     bool? isCompleted,
-  }) {
-    return StopWatchState(
-      isLoading: isLoading ?? this.isLoading,
-      isRunning: isRunning ?? this.isRunning,
-      isCompleted: isCompleted ?? this.isCompleted,
-    );
-  }
+  }) =>
+      StopWatchState(
+        isLoading: isLoading ?? this.isLoading,
+        isRunning: isRunning ?? this.isRunning,
+        isCompleted: isCompleted ?? this.isCompleted,
+      );
 }
 
 class StopWatchCubit extends Cubit<StopWatchState> {
@@ -39,11 +38,7 @@ class StopWatchCubit extends Cubit<StopWatchState> {
   Future<void> initialize() async {
     try {
       await useCase.getInitialValue();
-
-      if (!isClosed) {
-        emit(state.copyWith(isLoading: false));
-      }
-    } catch (_) {
+    } finally {
       if (!isClosed) {
         emit(state.copyWith(isLoading: false));
       }
@@ -64,44 +59,25 @@ class StopWatchCubit extends Cubit<StopWatchState> {
   }
 
   void start() {
-    if (isClosed || state.isRunning) return;
+    // Không cho phép bấm chạy khi đang chạy hoặc đã đếm xong về 0
+    if (isClosed || state.isRunning || state.isCompleted) return;
 
     useCase.start();
-
-    emit(
-      state.copyWith(
-        isLoading: false,
-        isRunning: true,
-        isCompleted: false,
-      ),
-    );
+    emit(state.copyWith(isLoading: false, isRunning: true, isCompleted: false));
   }
 
   void pause() {
     if (isClosed || !state.isRunning) return;
 
     useCase.pause();
-
-    emit(
-      state.copyWith(
-        isLoading: false,
-        isRunning: false,
-      ),
-    );
+    emit(state.copyWith(isRunning: false));
   }
 
   void reset() {
     if (isClosed) return;
 
     useCase.reset();
-
-    emit(
-      state.copyWith(
-        isLoading: false,
-        isRunning: false,
-        isCompleted: false,
-      ),
-    );
+    emit(state.copyWith(isLoading: false, isRunning: false, isCompleted: false));
   }
 
   @override

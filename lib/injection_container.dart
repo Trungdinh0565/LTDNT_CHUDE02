@@ -8,15 +8,8 @@ import 'Presentation/stopWatch_cubit.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
-  getIt.registerFactory<StopWatchRepository>(
-    () => StopWatchRepositoryImpl(),
-  );
-
-  getIt.registerFactory<StopWatchUseCase>(
-    () => StopWatchUseCase(getIt<StopWatchRepository>()),
-  );
-
-  getIt.registerFactory<StopWatchCubit>(
-    () => StopWatchCubit(getIt<StopWatchUseCase>()),
-  );
+  getIt
+    ..registerFactory<StopWatchRepository>(() => StopWatchRepositoryImpl())
+    ..registerFactory<StopWatchUseCase>(() => StopWatchUseCase(getIt()))
+    ..registerFactory<StopWatchCubit>(() => StopWatchCubit(getIt()));
 }
