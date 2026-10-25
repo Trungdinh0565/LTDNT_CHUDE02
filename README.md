@@ -1,5 +1,4 @@
 # LTDNT_CHUDE02 - Lập trình Bất đồng bộ với Future & Stream trong Flutter
----
 
 *Báo cáo tuần - Môn lập trình đa nền tảng*
 
@@ -54,7 +53,7 @@ test/
 - Dart SDK tương ứng đi kèm Flutter.
 - Trình biên dịch: Visual Studio Code, Android Studio hoặc Cursor.
 
-### Cách 1: Chạy trực tiếp từ mã nguồn (Source code)
+### Cách 1: Chạy trực tiếp từ mã nguồn
 1. **Clone repository:**
    ```bash
    git clone https://github.com/Trungdinh0565/LTDNT_CHUDE02.git
@@ -82,7 +81,7 @@ test/
 
 #### 1. Lệnh xuất file APK:
 Mở terminal tại thư mục gốc của dự án và chạy lệnh sau để build:
-- **Xuất bản Release (Khuyên dùng - dung lượng nhẹ, hiệu năng cao nhất):**
+- **Xuất bản Release (Khuyên dùngt):**
   ```bash
   flutter build apk --release
   ```
