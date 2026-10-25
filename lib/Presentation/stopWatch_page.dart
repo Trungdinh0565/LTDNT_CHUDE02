@@ -98,7 +98,7 @@ class StopWatchPage extends StatelessWidget {
                               const Padding(
                                 padding: EdgeInsets.only(top: 8.0),
                                 child: Text(
-                                  '⏰ HẾT GIỜ!',
+                                  'HẾT GIỜ!',
                                   style: TextStyle(
                                     fontSize: 18,
                                     color: Colors.red,
@@ -110,22 +110,6 @@ class StopWatchPage extends StatelessWidget {
                         );
                       },
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      state.isRunning
-                          ? 'Đang đếm ngược...'
-                          : (state.isCompleted
-                              ? 'Đã hoàn thành đếm ngược'
-                              : 'Đang tạm dừng / Chờ bắt đầu'),
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: state.isRunning
-                            ? Colors.green
-                            : (state.isCompleted ? Colors.red : Colors.grey),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
                     // Bộ chọn nhanh thời gian
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -136,23 +120,13 @@ class StopWatchPage extends StatelessWidget {
                         children: [
                           ActionChip(
                             avatar: const Icon(Icons.timer, size: 18),
+                            label: const Text('30 giây'),
+                            onPressed: state.isRunning ? null : () => cubit.setDuration(30),
+                          ),
+                          ActionChip(
+                            avatar: const Icon(Icons.timer, size: 18),
                             label: const Text('1 phút'),
                             onPressed: state.isRunning ? null : () => cubit.setDuration(60),
-                          ),
-                          ActionChip(
-                            avatar: const Icon(Icons.timer, size: 18),
-                            label: const Text('3 phút'),
-                            onPressed: state.isRunning ? null : () => cubit.setDuration(180),
-                          ),
-                          ActionChip(
-                            avatar: const Icon(Icons.timer, size: 18),
-                            label: const Text('5 phút'),
-                            onPressed: state.isRunning ? null : () => cubit.setDuration(300),
-                          ),
-                          ActionChip(
-                            avatar: const Icon(Icons.timer, size: 18),
-                            label: const Text('10 phút'),
-                            onPressed: state.isRunning ? null : () => cubit.setDuration(600),
                           ),
                           ActionChip(
                             avatar: const Icon(Icons.edit, size: 18),
