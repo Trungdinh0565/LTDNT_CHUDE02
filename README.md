@@ -130,3 +130,4 @@ File APK xuất ra được lưu tại đường dẫn:
 ## 5. Thành viên thực hiện
 - **Đinh Tiến Trung**
 - **Lê Văn Nhật**
+**demo trên chỉ nhằm mục đích phục mục môn học**
