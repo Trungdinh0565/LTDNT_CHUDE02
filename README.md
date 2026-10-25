@@ -1,5 +1,7 @@
-# LTDNT_CHUDE02 - Quản lý Bất đồng bộ với Future & Stream trong Flutter
-*Báo cáo tuần - Chủ đề 02: Quản lý Bất đồng bộ (Asynchronous Programming) trong Flutter*
+# LTDNT_CHUDE02 - Lập trình Bất đồng bộ với Future & Stream trong Flutter
+---
+
+*Báo cáo tuần - Môn lập trình đa nền tảng*
 
 ---
 
@@ -14,18 +16,7 @@ Dự án **Countdown Timer App** (Đồng hồ đếm ngược) được xây d�
 
 ---
 
-## 2. Tính năng nổi bật
-- ⏱️ **Đồng hồ đếm ngược trực quan:** Hiển thị thời gian dạng chuẩn `HH:MM:SS` rõ ràng, tự động dừng chính xác khi về 0.
-- ⚡ **Thiết lập thời gian nhanh (Presets):** Cung cấp các nút chọn nhanh: 1 phút, 3 phút, 5 phút, 10 phút.
-- ✏️ **Tự nhập thời gian:** Hộp thoại tùy chỉnh cho phép người dùng nhập Giờ, Phút, Giây linh hoạt, có xác thực dữ liệu và giải phóng bộ nhớ sạch sẽ.
-- ⏯️ **Điều khiển linh hoạt:** Bắt đầu (Start), Tạm dừng (Pause), Đặt lại về thời gian ban đầu (Reset).
-- 🔒 **Chống lỗi kẹt trạng thái:** Vô hiệu hóa nút Bắt đầu khi thời gian đã về `00:00:00`, yêu cầu Đặt lại hoặc cài đặt mốc thời gian mới trước khi chạy tiếp.
-- 🔔 **Thông báo trạng thái hoàn thành:** Tự động phát hiện khi hết giờ (`isCompleted = true`), hủy Timer và hiển thị nhãn `⏰ HẾT GIỜ!`.
-- 🧪 **Kiểm thử tự động (Widget & Unit Tests):** Bộ test toàn diện kiểm tra đầy đủ vòng đời đếm ngược, chuyển đổi preset, mở dialog nhập số và xử lý luồng bất đồng bộ (100% passed).
-
----
-
-## 3. Công nghệ và Thư viện sử dụng
+## 2. Công nghệ và Thư viện sử dụng
 - **Flutter SDK** (hỗ trợ đa nền tảng: Android, iOS, Web, Windows, macOS, Linux).
 - **Dart Async (`Future`, `Stream`, `StreamController.broadcast()`, `Timer`):** Xử lý tác vụ bất đồng bộ và luồng dữ liệu thời gian.
 - **Clean Architecture:** Tách biệt rõ ràng giữa Business Logic, Data và UI.
@@ -34,7 +25,7 @@ Dự án **Countdown Timer App** (Đồng hồ đếm ngược) được xây d�
 
 ---
 
-## 4. Cấu trúc thư mục dự án
+## 3. Cấu trúc thư mục dự án
 Dự án được tổ chức theo cấu trúc Clean Architecture chuẩn hóa và tinh gọn:
 
 ```text
@@ -54,75 +45,9 @@ lib/
 test/
 └── widget_test.dart              # Kiểm thử giao diện và kịch bản bất đồng bộ
 ```
-
 ---
 
-## 5. Chi tiết kiến trúc và luồng dữ liệu bất đồng bộ
-
-### Sơ đồ kiến trúc & luồng dữ liệu:
-```mermaid
-graph TD
-    UI["Presentation Layer: StopWatchPage\n(StreamBuilder + BlocBuilder)"]
-    Cubit["Presentation Layer: StopWatchCubit\n(State: isLoading, isRunning, isCompleted)"]
-    UseCase["Domain Layer: StopWatchUseCase"]
-    Repo["Data Layer: StopWatchRepositoryImpl\n(Timer.periodic + StreamController.broadcast)"]
-    Entity["Domain Layer: StopWatchEntity\n(remainingSeconds, initialSeconds, isCompleted)"]
-
-    UI -->|"Gọi hành động (start, pause, reset, setDuration)"| Cubit
-    Cubit -->|"Chuyển tiếp tác vụ nghiệp vụ"| UseCase
-    UseCase -->|"Thao tác dữ liệu"| Repo
-    Repo -->|"Đẩy dữ liệu mỗi giây (Stream.add)"| Entity
-    Entity -->|"Lắng nghe cập nhật thời gian thực (realtime UI)"| UI
-    Entity -->|"Lắng nghe trạng thái hoàn thành"| Cubit
-```
-
-### 5.1. Domain Layer (Lớp nghiệp vụ)
-- **`StopWatchEntity`**: Chứa dữ liệu cốt lõi:
-  - `remainingSeconds`: Số giây còn lại.
-  - `initialSeconds`: Thời gian ban đầu được thiết lập.
-  - `isCompleted`: Cờ đánh dấu khi đồng hồ đếm về 0.
-- **`StopWatchRepository`**: Interface định nghĩa:
-  - `Stream<StopWatchEntity> get stream;`
-  - `Future<StopWatchEntity> getInitialValue();`
-  - `void start();`
-  - `void pause();`
-  - `void reset();`
-  - `void setDuration(int seconds);`
-  - `Future<void> dispose();`
-- **`StopWatchUseCase`**: Lớp trung gian chuyển tiếp và xử lý các ca nghiệp vụ từ Cubit xuống Repository.
-
-### 5.2. Data Layer (Lớp dữ liệu & Xử lý bất đồng bộ)
-- **`StopWatchModel`**: Kế thừa `StopWatchEntity`.
-- **`StopWatchRepositoryImpl`**:
-  - Quản lý `StreamController<StopWatchEntity>.broadcast()` để nhiều widget/listener có thể lắng nghe luồng dữ liệu cùng lúc.
-  - **`getInitialValue()`**: Sử dụng `Future.delayed(Duration(milliseconds: 500))` mô phỏng quá trình khởi tạo dữ liệu bất đồng bộ trước khi hiển thị.
-  - **`start()`**: Sử dụng `Timer.periodic(Duration(seconds: 1))` trừ lùi `_remainingSeconds` mỗi giây, gửi đối tượng `StopWatchModel` mới nhất vào stream qua `_controller.add()`. Khi thời gian về 0, Timer tự động dừng và gửi sự kiện hoàn tất.
-  - **`pause()`**: Hủy instance `Timer` hiện tại nhưng vẫn giữ nguyên giá trị `_remainingSeconds`.
-  - **`reset()`**: Khôi phục `_remainingSeconds` về bằng `_initialSeconds` và đẩy dữ liệu mới vào stream.
-  - **`setDuration(int seconds)`**: Cho phép thay đổi mốc thời gian đếm ngược mới và phát dữ liệu ngay lập tức.
-  - **`dispose()`**: Đóng stream controller và hủy Timer khi giải phóng tài nguyên.
-
-### 5.3. Presentation Layer (Lớp giao diện & Quản lý trạng thái)
-- **`StopWatchCubit`**: Phát ra `StopWatchState` quản lý 3 cờ: `isLoading` (đang nạp dữ liệu ban đầu), `isRunning` (đồng hồ đang chạy hay tạm dừng) và `isCompleted` (đã đếm về 0).
-- **`StopWatchPage`**:
-  - `BlocBuilder<StopWatchCubit, StopWatchState>`: Kiểm soát trạng thái hiển thị loading spinner hoặc bật/tắt (enable/disable) các nút điều khiển phù hợp.
-  - `StreamBuilder<StopWatchEntity>`: Lắng nghe trực tiếp `cubit.stream` để vẽ lại đồng hồ số và huy hiệu thông báo (status badge) theo thời gian thực mà không cần `setState()` thủ công.
-  - `_SetTimeDialog`: Được quản lý dưới dạng `StatefulWidget` độc lập, tự động hủy (dispose) các `TextEditingController` khi đóng để ngăn ngừa rò rỉ bộ nhớ (Memory Leak).
-
-### 5.4. Dependency Injection
-Được cấu hình tập trung trong [lib/injection_container.dart](lib/injection_container.dart) sử dụng `GetIt` tinh gọn:
-```dart
-Future<void> setupDependencies() async {
-  getIt
-    ..registerFactory<StopWatchRepository>(() => StopWatchRepositoryImpl())
-    ..registerFactory<StopWatchUseCase>(() => StopWatchUseCase(getIt()))
-    ..registerFactory<StopWatchCubit>(() => StopWatchCubit(getIt()));
-}
-```
-
----
-
-## 6. Hướng dẫn cài đặt và chạy ứng dụng
+## 4. Hướng dẫn cài đặt và chạy ứng dụng
 
 ### Yêu cầu môi trường
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (phiên bản `>=3.13.0`).
@@ -203,6 +128,6 @@ File APK xuất ra được lưu tại đường dẫn:
 
 ---
 
-## 7. Thành viên thực hiện
+## 5. Thành viên thực hiện
 - **Đinh Tiến Trung**
 - **Lê Văn Nhật**
